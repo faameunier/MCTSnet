@@ -67,9 +67,7 @@ target/
 *.sublime-workspace
 *.sublime-project
 
-img/*
-img_uncropped/*
-banners/*
+gym-sokoban/
 temp/*
 
 *.secret*
