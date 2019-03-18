@@ -9,9 +9,16 @@ def get_image(env):
 
 
 def encode(x):
-    y = np.zeros((4, 10, 10), dtype=np.int8)
-    y[0] = x == 0  # wall
-    y[1] = x == 5  # agent
-    y[2] = (x == 3) | (x == 4)  # box
-    y[3] = x == 2  # target
+    y = np.zeros((10, 10, 4), dtype=np.int8)
+    convert = {
+        0: [1, 0, 0, 0],
+        1: [0, 0, 0, 0],
+        5: [0, 1, 0, 0],
+        3: [0, 0, 1, 0],
+        4: [0, 0, 1, 0],
+        2: [0, 0, 0, 1]
+    }
+    for i in range(10):
+        for j in range(10):
+            y[i, j] = convert[x[i, j]]
     return y
