@@ -1,0 +1,6 @@
+[
+  {
+    "id": "SokobanEnc-v0",
+    "entry_point": "MCTSnet.sokoban.env:SokobanEnvEncoded"
+  }
+]
