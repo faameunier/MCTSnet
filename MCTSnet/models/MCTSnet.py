@@ -16,12 +16,16 @@ class MCTSnet(nn.Module):
         self.M = n_simulations
         self.tree = None
 
+    def reset_tree(self, x):
+        self.tree = MemoryTree(8)
+        self.tree.set_root(x, self.embedding(x))
+
+    def replanning(self, action):
+        self.tree.cut_tree(action)
+
     def forward(self, x):
         if x.shape[0] > 1:
             raise ValueError("Only a batch size of one is implemented as of now :)")
-
-        self.tree = MemoryTree(8)
-        self.tree.set_root(x, self.embedding(x))
 
         def run_simulation():
             new_env = copy.deepcopy(self.env)
