@@ -4,10 +4,13 @@ class MemoryTree():
         self.root = None
 
     def set_root(self, state, h):
-        if self.root is not None:
-            self.root = MemoryError(state, h, 0, self)
+        if self.root is None:
+            self.root = MemoryNode(state, h, 0, False, self)
         else:
             raise ValueError("Root is already defined")
+
+    def get_root(self):
+        return self.root
 
     def cut_tree(self, root_action):
         new_root = self.root.children[root_action]
@@ -20,18 +23,21 @@ class MemoryTree():
 
 
 class MemoryNode():
-    def __init__(self, state, h, reward, tree, parent=None):
+    def __init__(self, state, h, reward, solved, tree, parent=None, action=None):
         self.state = state
         self.h = h
         self.reward = reward
+        self.solved = solved
         self.children = [None for i in range(tree.n_children)]
         self.parent = parent
+        self.action = action
+        self.tree = tree
 
     def get_children(self, action):
         return self.children[action]
 
-    def set_child(self, action, state, h, reward):
-        self.children[action] = MemoryNode(state, h, reward, self.tree, self)
+    def set_child(self, action, state, h, reward, solved):
+        self.children[action] = MemoryNode(state, h, reward, solved, self.tree, self, action.float())
         return self.children[action]
 
     def get_parent(self):

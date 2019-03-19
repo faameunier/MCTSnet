@@ -9,7 +9,7 @@ def get_image(env):
 
 
 def encode(x):
-    y = np.zeros((4, 10, 10), dtype=np.uint8)
+    y = np.zeros((4, 10, 10), dtype=np.float32)
     y[0] = x == 0  # wall
     y[1] = x == 5  # agent
     y[2] = (x == 3) | (x == 4)  # box
