@@ -1,11 +1,15 @@
+import torch
 import torch.nn.functional as F
 import torch.nn as nn
+
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class PiLogits(nn.Module):
     def __init__(self, embeddings_size=128, n_actions=8):
         super().__init__()
-        self.fc1 = nn.Linear(embeddings_size, n_actions)
+        self.fc1 = nn.Linear(embeddings_size, n_actions).to(device)
 
     def forward(self, h_s):
         h = self.fc1(h_s.view(h_s.size(0), -1))
@@ -15,11 +19,11 @@ class PiLogits(nn.Module):
 class PiPriorLogits(nn.Module):
     def __init__(self, embeddings_size=128, n_actions=8):
         super().__init__()
-        self.input = nn.Conv2d(n_actions + 1, 32, kernel_size=(3, 3), stride=1, padding=1)
-        self.res1 = nn.Conv2d(32, 32, kernel_size=(3, 3), stride=1, padding=1)
-        self.res2 = nn.Conv2d(32, 32, kernel_size=(3, 3), stride=1, padding=1)
-        self.final = nn.Conv2d(32, 16, kernel_size=(1, 1), stride=1, padding=0)
-        self.out = nn.Linear(16 * embeddings_size, n_actions)
+        self.input = nn.Conv2d(n_actions + 1, 32, kernel_size=(3, 3), stride=1, padding=1).to(device)
+        self.res1 = nn.Conv2d(32, 32, kernel_size=(3, 3), stride=1, padding=1).to(device)
+        self.res2 = nn.Conv2d(32, 32, kernel_size=(3, 3), stride=1, padding=1).to(device)
+        self.final = nn.Conv2d(32, 16, kernel_size=(1, 1), stride=1, padding=0).to(device)
+        self.out = nn.Linear(16 * embeddings_size, n_actions).to(device)
 
     def forward(self, all_h):
         x = F.relu(self.input(all_h))

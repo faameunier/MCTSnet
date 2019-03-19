@@ -5,6 +5,9 @@ from .. import utils
 import copy
 
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+
 class MCTSnet(nn.Module):
     def __init__(self, backup, embedding, policy, readout, n_simulations=10, n_actions=8):
         super().__init__()
@@ -19,14 +22,14 @@ class MCTSnet(nn.Module):
 
     @property
     def env(self):
-        return self._env
+        return self.__env
 
     @env.setter
     def env(self, attr):
         self.__env = attr
 
     def reset_tree(self, x):
-        self.tree = MemoryTree(8)
+        self.tree = MemoryTree(self.n_actions)
         self.tree.set_root(x, self.embedding(x))
 
     def replanning(self, action):
@@ -50,18 +53,18 @@ class MCTSnet(nn.Module):
                     if child is not None:
                         h_children.append(child.h)
                     else:
-                        h_children.append(torch.zeros(self.embedding.embeddings_size, requires_grad=True).reshape(1, self.embedding.embeddings_size))
-                actions = self.policy(torch.cat(h_children, dim=0).reshape(-1, self.policy.n_actions + 1, self.embedding.embeddings_size))
-                next_action = torch.argmax(actions)
-                print(next_action)
-                next_action = utils.softargmax(actions)
-                print(next_action)
+                        h_children.append(torch.zeros(self.embedding.embeddings_size, requires_grad=True).reshape(1, self.embedding.embeddings_size).to(device))
+                actions = self.policy(torch.cat(h_children, dim=0).reshape(-1, self.policy.n_actions + 1, self.embedding.embeddings_size).to(device))
+                next_action = torch.argmax(actions).float().to(device)
+                # print(next_action)
+                # next_action = utils.diff_argma(actions)
+                # print(next_action)
                 next_node = node.get_child(next_action)
                 if next_node is None:
                     # new node discovered
                     state, reward, win, _ = new_env.step(int(next_action))
-                    state = torch.tensor([state], requires_grad=True)
-                    next_node = node.set_child(next_action, state, self.embedding(x), torch.tensor(reward, requires_grad=True), win)
+                    state = torch.tensor([state], requires_grad=True).to(device)
+                    next_node = node.set_child(next_action, state, self.embedding(x), torch.tensor(reward, requires_grad=True).to(device), win)
                     stop = True
                 elif next_node.solved:
                     stop = True

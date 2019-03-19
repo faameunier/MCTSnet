@@ -2,6 +2,8 @@ import logging
 import pkg_resources
 import json
 from gym.envs.registration import register
+from . import solver
+
 
 logger = logging.getLogger(__name__)
 

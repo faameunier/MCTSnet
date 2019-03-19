@@ -17,7 +17,8 @@ class MemoryTree():
         for k in reversed(range(self.n_children)):
             if k != root_action:
                 del self.root.children[k]
-        new_root.parent = None
+        if new_root is not None:
+            new_root.parent = None
         del self.root
         self.root = new_root
 
