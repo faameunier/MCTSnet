@@ -16,8 +16,8 @@ class Epsilon(nn.Module):
     def forward(self, state):
         x = F.relu(self.input(state))
         r = F.relu(self.res1(x))
-        r = F.relu(self.res2(x))
-        r = F.relu(self.res3(x))
+        r = F.relu(self.res2(r))
+        r = F.relu(self.res3(r))
         y = x + r
         y = F.relu(self.final(y))
         return F.relu(self.out(y.view((y.size(0), -1))))

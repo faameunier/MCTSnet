@@ -34,11 +34,11 @@ class MemoryNode():
         self.tree = tree
 
     def get_children(self, action):
-        return self.children[action]
+        return self.children[action.int()]
 
     def set_child(self, action, state, h, reward, solved):
-        self.children[action] = MemoryNode(state, h, reward, solved, self.tree, self, action.float())
-        return self.children[action]
+        self.children[action.int()] = MemoryNode(state, h, reward, solved, self.tree, self, action)
+        return self.children[action.int()]
 
     def get_parent(self):
         return self.parent

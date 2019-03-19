@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from ..memory.tree import *
+from .. import utils
 import copy
 
 
@@ -35,7 +36,7 @@ class MCTSnet(nn.Module):
             # exploring / exploitation
             while not stop:
                 h = node.h
-                children = [node.get_children(k) for k in range(self.n_actions)]
+                children = [node.get_children(k) for k in torch.arange(0., self.n_actions)]
                 h_children = [h]
                 for child in children:
                     if child is not None:
@@ -44,6 +45,9 @@ class MCTSnet(nn.Module):
                         h_children.append(torch.zeros(self.embedding.embeddings_size, requires_grad=True).reshape(1, self.embedding.embeddings_size))
                 actions = self.policy(torch.cat(h_children, dim=0).reshape(-1, self.policy.n_actions + 1, self.embedding.embeddings_size))
                 next_action = torch.argmax(actions)
+                print(next_action)
+                next_action = utils.softargmax(actions)
+                print(next_action)
                 next_node = node.get_children(next_action)
                 if next_node is None:
                     # new node discovered

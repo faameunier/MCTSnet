@@ -24,7 +24,7 @@ class PiPriorLogits(nn.Module):
     def forward(self, all_h):
         x = F.relu(self.input(all_h))
         r = F.relu(self.res1(x))
-        r = F.relu(self.res2(x))
+        r = F.relu(self.res2(r))
         y = x + r
         y = F.relu(self.final(y))
         return F.relu(self.out(y.view((y.size(0), -1))))
