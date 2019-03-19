@@ -6,16 +6,24 @@ import copy
 
 
 class MCTSnet(nn.Module):
-    def __init__(self, env, backup, embedding, policy, readout, n_simulations=10, n_actions=8):
+    def __init__(self, backup, embedding, policy, readout, n_simulations=10, n_actions=8):
         super().__init__()
         self.backup = backup
         self.embedding = embedding
         self.policy = policy
         self.readout = readout
         self.n_actions = n_actions
-        self.env = env
         self.M = n_simulations
         self.tree = None
+        self.env = None
+
+    @property
+    def env(self):
+        return self._env
+
+    @env.setter
+    def env(self, attr):
+        self.__env = attr
 
     def reset_tree(self, x):
         self.tree = MemoryTree(8)
