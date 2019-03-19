@@ -33,7 +33,7 @@ class MemoryNode():
         self.action = action
         self.tree = tree
 
-    def get_children(self, action):
+    def get_child(self, action):
         return self.children[action.int()]
 
     def set_child(self, action, state, h, reward, solved):
