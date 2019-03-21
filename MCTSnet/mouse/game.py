@@ -19,7 +19,7 @@ class Environment(object):
 
         # self time
         self.t = 0
-
+        self.score = 0
         self.scale = 16
 
     def get_frame(self):
@@ -75,7 +75,10 @@ class Environment(object):
         reward = self.board[self.x, self.y]
         self.board[self.x, self.y] = 0
         game_over = self.t > self.max_time or len(np.argwhere(self.board >= 0.5)) == 0
+        if len(np.argwhere(self.board >= 0.5)) == 0:
+            reward += 1000
         state = np.array([self.board, self.position])
+        self.score += reward
         return state, reward, game_over, None
 
     def reset(self):
@@ -83,11 +86,11 @@ class Environment(object):
 
         self.x = np.random.randint(3, self.grid_size - 3, size=1)[0]
         self.y = np.random.randint(3, self.grid_size - 3, size=1)[0]
-
-        bonus = 0.5 * np.random.binomial(1, self.temperature, size=self.grid_size**2)
+        self.score = 0
+        bonus = 5.0 * np.random.binomial(1, self.temperature, size=self.grid_size**2)
         bonus = bonus.reshape(self.grid_size, self.grid_size)
 
-        malus = -1.0 * np.random.binomial(1, self.temperature, size=self.grid_size**2)
+        malus = -20.0 * np.random.binomial(1, self.temperature, size=self.grid_size**2)
         malus = malus.reshape(self.grid_size, self.grid_size)
 
         malus[bonus > 0] = 0
@@ -122,7 +125,8 @@ class EnvironmentExploring(Environment):
         state, reward, game_over, _ = super().step(action)
         if reward == 0:
             reward -= self.malus_position[self.x, self.y]
-            self.malus_position[self.x, self.y] = 0.2
+            self.score -= self.malus_position[self.x, self.y]
+            self.malus_position[self.x, self.y] += 1
         return self.create_state(state), reward, game_over, None
 
     def reset(self):

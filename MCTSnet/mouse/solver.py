@@ -1,8 +1,8 @@
 import numpy as np
-from . import utils
 import copy
 import random
 from tqdm import tqdm
+import marshal
 
 
 class MCTSTree():
@@ -64,13 +64,13 @@ class MCTSNode():
 
 
 class MCTS():
-    def __init__(self, env, max_steps=100, n_simulations=10, rollout=100):
+    def __init__(self, env, max_steps=100, n_simulations=25, rollout=50):
         self.env = env
         self.n_simulations = n_simulations
         self.max_steps = max_steps
         self.rollout = rollout
         self.tree = MCTSTree()
-        self.tree.set_root(utils.encode(env.room_state))
+        self.tree.set_root(env.reset())
         self.solution = []
 
     def run_sim(self):
@@ -98,25 +98,31 @@ class MCTS():
             node.update(reward)
             node = node.parent
 
-    def find_next_action(self):
+    def find_next_action(self, scores=False):
         for s in range(self.n_simulations):
             self.run_sim()
-        children = self.tree.get_root().children
-        temp = []
-        for c in children:
-            if c is not None:
-                temp.append(c)
-        return sorted(temp, key=lambda n: n.visits)[-1].action
+        if not scores:
+            return self.tree.get_root().get_best_child().action
+        else:
+            root = self.tree.get_root()
+            scores = []
+            for n in root.children:
+                if n is not None:
+                    scores.append(n.value / n.visits + np.sqrt(2 * np.log(root.visits) / n.visits))
+                else:
+                    scores.append(-10)
+            return np.argmax(scores), scores
 
     def solve(self):
         self.solution = []
         for k in tqdm(range(self.max_steps)):
-            action = self.find_next_action()
+            action, scores = self.find_next_action(True)
             _, _, win, _ = self.env.step(action)
             self.solution.append(
                 {
                     'state': self.tree.get_root().state,
-                    'action': action
+                    'action': action,
+                    'scores': scores,
                 })
             self.tree.cut_tree(action)
             if win:

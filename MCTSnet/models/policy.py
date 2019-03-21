@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-
+import numpy as np
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -48,3 +48,13 @@ class Pi(nn.Module):
         psi = self.piL(all_h[:, 0])
         psi_prior = self.piPL(all_h.reshape(-1, self.n_actions + 1, self.embeddings_size, 1))
         return F.softmax(self.w0 * psi + self.w1 * psi_prior, dim=1)
+
+
+class randomPi(nn.Module):
+    def __init__(self, n_actions=8):
+        super().__init__()
+        self.n_actions = n_actions
+        self.out = nn.Linear(n_actions, 4).to(device)
+
+    def forward(self, x):
+        return F.softmax(torch.tensor([np.random.rand(4)]))
