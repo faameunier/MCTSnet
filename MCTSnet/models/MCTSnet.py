@@ -37,7 +37,7 @@ class MCTSnet(nn.Module):
 
     def forward(self, x):
         if x.shape[0] > 1:
-            raise ValueError("Only a batch size of one is implemented as of now :)")
+            raise ValueError("Only a batch size of one is implemented")
 
         def run_simulation():
             new_env = copy.deepcopy(self.env)
@@ -47,7 +47,7 @@ class MCTSnet(nn.Module):
             # exploring / exploitation
             while not stop:
                 h = node.h
-                children = [node.get_child(k) for k in torch.arange(0., self.n_actions)]
+                children = node.children
                 h_children = [h]
                 for child in children:
                     if child is not None:
@@ -57,15 +57,19 @@ class MCTSnet(nn.Module):
                 actions = self.policy(torch.cat(h_children, dim=0).reshape(-1, self.policy.n_actions + 1, self.embedding.embeddings_size).to(device))
                 next_action = torch.argmax(actions).float().to(device)
                 # print(next_action)
-                # next_action = utils.diff_argma(actions)
+                # next_action = utils.softargmax(actions)
                 # print(next_action)
                 next_node = node.get_child(next_action)
                 if next_node is None:
                     # new node discovered
                     state, reward, win, _ = new_env.step(int(next_action))
                     state = torch.tensor([state], requires_grad=True).to(device)
-                    next_node = node.set_child(next_action, state, self.embedding(x), torch.tensor(reward, requires_grad=True).to(device), win)
-                    stop = True
+                    temp_node = node.set_child(next_action, state, self.embedding(x), torch.tensor(reward, requires_grad=True).to(device), win)
+                    if temp_node is not None:
+                        next_node = temp_node
+                        stop = True
+                    else:
+                        node = next_node
                 elif next_node.solved:
                     stop = True
                 else:

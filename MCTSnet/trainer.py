@@ -103,14 +103,14 @@ class MCTSnetSokoban():
 
 
 class MCTSnetMouse():
-    def __init__(self, feature_space=(3, 14, 14), n_embeddings=128, n_actions=4, n_simulations=15):
+    def __init__(self, feature_space=(2, 10, 10), n_embeddings=256, n_actions=4, n_simulations=25):
         self.feature_space = feature_space
         self.n_embeddings = n_embeddings
         self.n_actions = n_actions
         self.n_simulations = n_simulations
-        self.backup = models.backup.BetaMLP(self.n_embeddings)
-        self.embedding = models.embedding.Epsilon(feature_space[0], feature_space[1:], self.n_embeddings)
-        self.policy = models.policy.randomPi(self.n_actions)
+        self.backup = models.backup.Beta(self.n_embeddings)
+        self.embedding = models.embedding.Epsilon(feature_space[0], feature_space[1:], self.n_embeddings, subchannels=128)
+        self.policy = models.policy.randomPi(n_actions=self.n_actions)
         self.readout = models.readout.RhoLu(self.n_embeddings, self.n_actions)
         self.model = models.MCTSnet.MCTSnet(self.backup, self.embedding, self.policy, self.readout, self.n_simulations, self.n_actions)
         self.criterion = torch.nn.MSELoss()
@@ -135,19 +135,21 @@ class MCTSnetMouse():
         random.seed(seed)
         np.random.seed(seed)
         env = game.EnvironmentExploring(temperature=0.3)
-        solve = solver.MCTS(env, max_steps=max_steps, n_simulations=20, rollout=50)
+        solve = solver.MCTS(env, max_steps=max_steps, n_simulations=10, rollout=100)
         return solve.solve()
 
-    def train(self, training_size, epochs=5, max_steps=200):
+    def train(self, training_size, epochs=5, max_steps=200, offset=0):
         for e in range(epochs):
             running_loss = 0
             ite = 0
             for seed in range(training_size):
-                solution = self.solve_game(seed, max_steps=max_steps)
-                random.seed(seed)
-                np.random.seed(seed)
+                solution = self.solve_game(seed + offset, max_steps=max_steps)
+                random.seed(seed + offset)
+                np.random.seed(seed + offset)
                 env = game.EnvironmentExploring(temperature=0.3)
                 state = env.reset()
+                # display.clear_output(wait=True)
+                # display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
                 self.model.env = env
                 self.model.tree = MemoryTree(self.n_actions)
                 for s in solution:
@@ -177,17 +179,6 @@ class MCTSnetMouse():
                     if ite % max_steps == max_steps - 1:
                         print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / max_steps))
                         running_loss = 0.0
-                        # print(outputs)
-                        # # print(torch.nn.functional.softmax(torch.tensor([objectif])))
-                        # print(objectif)
-
-                    # display.clear_output(wait=True)
-                    # display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
-                    # print(objectif2)
-                    # print(outputs)
-                    # print(ite)
-                    # print("{:04.2f}".format(loss.item()))
-                    # time.sleep(0.1)
 
                     state, _, win, _ = self.model.env.step(s['action'])
                     if win:
@@ -220,30 +211,33 @@ class MCTSnetMouse():
         env = game.EnvironmentExploring(temperature=0.3)
         state = env.reset()
         self.model.env = env
-        first = True
-        inputs = torch.tensor(state).float().to(device)
-        inputs = inputs.reshape((-1, *self.feature_space))
-        self.model.reset_tree(inputs)
-
-        for s in range(max_steps):
-            if not first:
-                inputs = torch.tensor(state).float().to(device)
-                inputs = inputs.reshape((-1, *self.feature_space))
-
-            first = False
+        with torch.no_grad():
+            first = True
+            inputs = torch.tensor(state).float().to(device)
+            inputs = inputs.reshape((-1, *self.feature_space))
             self.model.reset_tree(inputs)
-            outputs = self.model(inputs)
 
-            self.model.replanning(torch.argmax(outputs))
+            for s in range(max_steps):
+                if not first:
+                    inputs = torch.tensor(state).float().to(device)
+                    inputs = inputs.reshape((-1, *self.feature_space))
 
-            state, _, win, _ = self.model.env.step(torch.argmax(outputs))
+                first = False
+                self.model.reset_tree(inputs)
+                outputs = self.model(inputs)
 
-            display.clear_output(wait=True)
-            display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
-            time.sleep(0.1)
+                self.model.replanning(torch.argmax(outputs))
 
-            if win:
-                break
+                state, _, win, _ = self.model.env.step(torch.argmax(outputs))
+
+                display.clear_output(wait=True)
+                display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
+                time.sleep(0.1)
+
+                if win:
+                    break
+
+        return env.score
 
     def play_solution(self, seed, max_steps=200):
         solution = self.solve_game(seed, max_steps)
@@ -258,4 +252,4 @@ class MCTSnetMouse():
             _, _, win, _ = env.step(step['action'])
             if win:
                 break
-        print("Score:", env.score)
+        return env.score

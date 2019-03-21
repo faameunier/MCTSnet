@@ -2,18 +2,20 @@ import numpy as np
 import copy
 import random
 from tqdm import tqdm
-import marshal
+import pickle
 
 
 class MCTSTree():
     def __init__(self):
         self.root = None
+        self.visited_states = []
         # self.nodes = []
         # self.nodes_hash = []
 
     def set_root(self, state):
         if self.root is None:
-            self.root = MCTSNode(state)
+            self.visited_states.append(pickle.dumps(state))
+            self.root = MCTSNode(state, tree=self)
             # self.nodes.append(self.root)
             # self.nodes_hash.append(marshal.dumps(self.root))
         else:
@@ -35,10 +37,10 @@ class MCTSTree():
 class MCTSNode():
     def __init__(self, state, reward=0, finished=False, action=None, parent=None, tree=None):
         self.action = action
-        self.state = state
         self.reward = reward
         self.parent = parent
         self.finished = finished
+        self.state = state
         self.tree = tree
         if not self.finished:
             self.moves = [0, 1, 2, 3]
@@ -48,15 +50,24 @@ class MCTSNode():
         self.value = reward
         self.visits = 1
 
-    def set_child(self, action, state, reward, finished):
-        node = MCTSNode(state, reward, finished, action, parent=self)
+    def set_child(self, state, action, reward, finished):
         self.moves.remove(action)
+        temp = pickle.dumps(state)
+        if temp in self.tree.visited_states:
+            return None
+        self.tree.visited_states.append(temp)
+        node = MCTSNode(state, reward, finished, action, parent=self, tree=self.tree)
         self.children[action] = node
         return node
 
     def get_best_child(self):
-        s = sorted(self.children, key=lambda n: n.value / n.visits + np.sqrt(2 * np.log(self.visits) / n.visits))[-1]
-        return s
+        scores = []
+        for n in self.children:
+            if n is not None:
+                scores.append(n.value / n.visits + np.sqrt(2 * np.log(self.visits) / n.visits))
+            else:
+                scores.append(-np.inf)
+        return self.children[np.argmax(scores)]
 
     def update(self, value):
         self.visits += 1
@@ -64,14 +75,16 @@ class MCTSNode():
 
 
 class MCTS():
-    def __init__(self, env, max_steps=100, n_simulations=25, rollout=50):
+    def __init__(self, env, max_steps=100, n_simulations=25, rollout=50, verbose=True):
         self.env = env
         self.n_simulations = n_simulations
         self.max_steps = max_steps
         self.rollout = rollout
         self.tree = MCTSTree()
-        self.tree.set_root(env.reset())
+        state = env.reset()
+        self.tree.set_root(state)
         self.solution = []
+        self.verbose = verbose
 
     def run_sim(self):
         env = copy.deepcopy(self.env)
@@ -80,14 +93,24 @@ class MCTS():
         reward = None
         win = None
 
-        while node.moves == [] and node.children != []:
+        while node.moves == [] and not node.finished:
             node = node.get_best_child()
             state, reward, win, _ = env.step(node.action)
 
         if not node.finished:
-            action = random.choice(node.moves)
-            state, reward, win, _ = env.step(action)
-            node = node.set_child(action, state, reward, win)
+            while True:
+                if not node.moves:
+                    node.finished = True
+                    break
+                temp_env = copy.deepcopy(env)
+                action = random.choice(node.moves)
+                state, reward, win, _ = temp_env.step(action)
+                new_node = node.set_child(state, action, reward, win)
+                if new_node is not None:
+                    env.step(action)
+                    node = new_node
+                    del temp_env
+                    break
 
         for k in range(self.rollout):
             state, reward, win, _ = env.step(random.choice([0, 1, 2, 3]))
@@ -106,25 +129,28 @@ class MCTS():
         else:
             root = self.tree.get_root()
             scores = []
+            scores = []
             for n in root.children:
                 if n is not None:
                     scores.append(n.value / n.visits + np.sqrt(2 * np.log(root.visits) / n.visits))
                 else:
                     scores.append(-10)
+            # print(scores)
             return np.argmax(scores), scores
 
     def solve(self):
         self.solution = []
-        for k in tqdm(range(self.max_steps)):
+        for k in tqdm(range(self.max_steps), disable=self.verbose):
             action, scores = self.find_next_action(True)
-            _, _, win, _ = self.env.step(action)
+            state, _, win, _ = self.env.step(action)
             self.solution.append(
                 {
-                    'state': self.tree.get_root().state,
                     'action': action,
                     'scores': scores,
                 })
-            self.tree.cut_tree(action)
+            self.tree = MCTSTree()
+            self.tree.set_root(state)
+            # self.tree.cut_tree(action)
             if win:
                 break
         return self.solution

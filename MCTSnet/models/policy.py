@@ -39,14 +39,14 @@ class Pi(nn.Module):
         super().__init__()
         self.embeddings_size = embeddings_size
         self.n_actions = n_actions
-        self.piL = PiLogits(embeddings_size, n_actions)
-        self.piPL = PiPriorLogits(embeddings_size, n_actions)
+        self.piL = PiLogits(embeddings_size, n_actions).to(device)
+        self.piPL = PiPriorLogits(embeddings_size, n_actions).to(device)
         self.w0 = w0
         self.w1 = w1
 
     def forward(self, all_h):
         psi = self.piL(all_h[:, 0])
-        psi_prior = self.piPL(all_h.reshape(-1, self.n_actions + 1, self.embeddings_size, 1))
+        psi_prior = self.piPL(all_h.reshape(-1, self.n_actions + 1, self.embeddings_size, 1).to(device))
         return F.softmax(self.w0 * psi + self.w1 * psi_prior, dim=1)
 
 
@@ -54,7 +54,7 @@ class randomPi(nn.Module):
     def __init__(self, n_actions=8):
         super().__init__()
         self.n_actions = n_actions
-        self.out = nn.Linear(n_actions, 4).to(device)
+        self.out = nn.Linear(n_actions, 1).to(device)
 
     def forward(self, x):
-        return F.softmax(torch.tensor([np.random.rand(4)]))
+        return F.relu(torch.tensor([np.random.rand(self.n_actions)]))
