@@ -10,6 +10,8 @@ from .mouse import solver
 from IPython import display
 import PIL
 import time
+from tqdm import tqdm
+import pickle
 # from .sokoban.solver import MCTS
 
 
@@ -103,18 +105,18 @@ class MCTSnetSokoban():
 
 
 class MCTSnetMouse():
-    def __init__(self, feature_space=(2, 10, 10), n_embeddings=256, n_actions=4, n_simulations=25):
+    def __init__(self, feature_space=(2, 10, 10), n_embeddings=128, n_actions=4, n_simulations=25):
         self.feature_space = feature_space
         self.n_embeddings = n_embeddings
         self.n_actions = n_actions
         self.n_simulations = n_simulations
         self.backup = models.backup.Beta(self.n_embeddings)
-        self.embedding = models.embedding.Epsilon(feature_space[0], feature_space[1:], self.n_embeddings, subchannels=128)
+        self.embedding = models.embedding.Epsilon(feature_space[0], feature_space[1:], self.n_embeddings, subchannels=64)
         self.policy = models.policy.randomPi(n_actions=self.n_actions)
-        self.readout = models.readout.RhoLu(self.n_embeddings, self.n_actions)
-        self.model = models.MCTSnet.MCTSnet(self.backup, self.embedding, self.policy, self.readout, self.n_simulations, self.n_actions)
-        self.criterion = torch.nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0001)
+        self.readout = models.readout.Rho(self.n_embeddings, self.n_actions)
+        self.model = models.MCTSnet.MCTSnet(self.backup, self.embedding, self.policy, self.readout, self.n_simulations, self.n_actions, style="set_state")
+        self.criterion = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0005)
         self.training_set = []
 
     @property
@@ -131,79 +133,44 @@ class MCTSnetMouse():
     def load_weights(self, path):
         self.model.load_state_dict(torch.load(path))
 
-    def solve_game(self, seed, max_steps=200):
+    def solve_game(self, seed, max_steps=200, verbose=False):
         random.seed(seed)
         np.random.seed(seed)
         env = game.EnvironmentExploring(temperature=0.3)
-        solve = solver.MCTS(env, max_steps=max_steps, n_simulations=10, rollout=100)
+        solve = solver.MCTS(env, max_steps=max_steps, n_simulations=10, rollout=100, verbose=verbose)
         return solve.solve()
 
-    def train(self, training_size, epochs=5, max_steps=200, offset=0):
+    def train(self, training_size, epochs=5, offset=0):
+        if training_size - offset > len(self.training_set):
+            raise ValueError("Not enough examples to train")
+        dataset = self.training_set[offset:training_size]
+        env = game.EnvironmentExploring(temperature=0.3)
         for e in range(epochs):
+            random.shuffle(dataset)
             running_loss = 0
             ite = 0
-            for seed in range(training_size):
-                solution = self.solve_game(seed + offset, max_steps=max_steps)
-                random.seed(seed + offset)
-                np.random.seed(seed + offset)
-                env = game.EnvironmentExploring(temperature=0.3)
-                state = env.reset()
-                # display.clear_output(wait=True)
-                # display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
+            for example in dataset:
+                ite += 1
+                env.set_state(example["state"])
                 self.model.env = env
-                self.model.tree = MemoryTree(self.n_actions)
-                for s in solution:
-                    ite += 1
-                    inputs = torch.tensor(state).float().to(device)
-                    inputs = inputs.reshape((-1, *self.feature_space))
+                inputs = torch.tensor(example["state"]).float().to(device)
+                inputs = inputs.reshape((-1, *self.feature_space))
 
-                    # if self.model.tree.get_root() is None:
-                    self.model.reset_tree(inputs)
+                self.model.reset_tree(inputs)
 
-                    self.optimizer.zero_grad()
-                    outputs = self.model(inputs)
+                self.optimizer.zero_grad()
+                outputs = self.model(inputs)
+                objectif2 = torch.tensor([example['action']]).long().to(device)
 
-                    # objectif = self.compute_values(self.model.tree)
-                    # objectif_arg = np.argmax(objectif)
-                    objectif2 = torch.tensor([s['scores']]).float().to(device)
-                    # objectif = torch.nn.functional.softmax(objectif, dim=1)
-                    # print(outputs)
-                    loss = self.criterion(outputs, objectif2)
-                    loss.backward()
-                    self.optimizer.step()
+                loss = self.criterion(outputs, objectif2)
+                loss.backward()
+                self.optimizer.step()
 
-                    running_loss += loss.item()
+                running_loss += loss.item()
 
-                    # print(s['action'], torch.argmax(outputs))
-                    # self.model.replanning(s['action'])
-                    if ite % max_steps == max_steps - 1:
-                        print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / max_steps))
-                        running_loss = 0.0
-
-                    state, _, win, _ = self.model.env.step(s['action'])
-                    if win:
-                        break
-
-    def compute_values(self, tree):
-        def recursive_explore(node):
-            node.value = float(node.reward)
-            count = 1
-            for c in node.children:
-                if c is not None:
-                    t_v, t_c = recursive_explore(c)
-                    node.value += t_v
-                    count += t_c
-            return node.value, count
-
-        res = []
-        for c in tree.get_root().children:
-            if c is not None:
-                res.append(recursive_explore(c))
-            else:
-                res.append((0., 1))
-        # print(res)
-        # time.sleep(2)
-        return [v / c for v, c in res]
+                if ite % 1000 == 999:
+                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 999))
+                    running_loss = 0.0
 
     def play(self, seed, max_steps=200):
         random.seed(seed)
@@ -232,11 +199,10 @@ class MCTSnetMouse():
 
                 display.clear_output(wait=True)
                 display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
-                time.sleep(0.1)
+                time.sleep(0.05)
 
                 if win:
                     break
-
         return env.score
 
     def play_solution(self, seed, max_steps=200):
@@ -253,3 +219,14 @@ class MCTSnetMouse():
             if win:
                 break
         return env.score
+
+    def build_training_set(self, size, max_steps=200, offset=0):
+        self.training_set = []
+        for seed in tqdm(range(size)):
+            self.training_set.append(self.solve_game(seed, max_steps))
+
+    def save_training_set(self, path):
+        pickle.dump(self.training_set, path)
+
+    def load_training_set(self, path):
+        self.training_set = pickle.load(path)

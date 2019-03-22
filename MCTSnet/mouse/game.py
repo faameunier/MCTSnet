@@ -124,3 +124,15 @@ class EnvironmentExploring(Environment):
 
     def create_state(self, super_state):
         return np.array((super_state[0], super_state[1], self.malus_position))
+
+    def set_state(self, state):
+        self.board = state[0]
+        self.position = state[1]
+        self.t = 0
+        self.score = 0
+        coords = np.argwhere(self.position == 1)[0]
+        self.x = coords[0]
+        self.y = coords[1]
+
+    def get_state(self, state):
+        return np.array([self.board, self.position])

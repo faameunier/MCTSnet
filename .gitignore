@@ -69,5 +69,6 @@ target/
 
 gym-sokoban/
 temp/*
+data/
 
 *.secret*

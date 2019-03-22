@@ -9,8 +9,19 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class MCTSnet(nn.Module):
-    def __init__(self, backup, embedding, policy, readout, n_simulations=10, n_actions=8):
+    def __init__(self, backup, embedding, policy, readout, n_simulations=10, n_actions=8, style="copy"):
         super().__init__()
+        self.fun = None
+        if style == "copy":
+            def helper(self):
+                return copy.deepcopy(self.env)
+            self.fun = helper
+        elif style == "set_state":
+            def helper(self):
+                return self.env.set_state(self.tree.get_root().state)
+            self.fun = helper
+        else:
+            raise ValueError("Unknown environment copy style")
         self.backup = backup
         self.embedding = embedding
         self.policy = policy
@@ -40,7 +51,7 @@ class MCTSnet(nn.Module):
             raise ValueError("Only a batch size of one is implemented")
 
         def run_simulation():
-            new_env = copy.deepcopy(self.env)
+            new_env = self.fun(self)
             node = self.tree.get_root()
             next_node = None
             stop = False

@@ -75,7 +75,7 @@ class MCTSNode():
 
 
 class MCTS():
-    def __init__(self, env, max_steps=100, n_simulations=25, rollout=50, verbose=True):
+    def __init__(self, env, max_steps=100, n_simulations=25, rollout=50, verbose=False):
         self.env = env
         self.n_simulations = n_simulations
         self.max_steps = max_steps
@@ -140,11 +140,12 @@ class MCTS():
 
     def solve(self):
         self.solution = []
-        for k in tqdm(range(self.max_steps), disable=self.verbose):
+        for k in tqdm(range(self.max_steps), disable=not self.verbose):
             action, scores = self.find_next_action(True)
             state, _, win, _ = self.env.step(action)
             self.solution.append(
                 {
+                    'state': state,
                     'action': action,
                     'scores': scores,
                 })
