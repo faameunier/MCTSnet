@@ -11,3 +11,4 @@ cd gym-sokoban
 pip install -e .
 ```
 
+This is a work in progress. Any ideas welcomed.
