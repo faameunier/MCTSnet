@@ -116,7 +116,7 @@ class MCTSnetMouse():
         self.readout = models.readout.Rho(self.n_embeddings, self.n_actions)
         self.model = models.MCTSnet.MCTSnet(self.backup, self.embedding, self.policy, self.readout, self.n_simulations, self.n_actions, style="set_state")
         self.criterion = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0005)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0001)
         self.training_set = []
 
     @property
@@ -144,6 +144,7 @@ class MCTSnetMouse():
         if training_size - offset > len(self.training_set):
             raise ValueError("Not enough examples to train")
         dataset = self.training_set[offset:training_size]
+        dataset = [item for solution in dataset for item in solution]
         env = game.EnvironmentExploring(temperature=0.3)
         for e in range(epochs):
             random.shuffle(dataset)
@@ -168,8 +169,8 @@ class MCTSnetMouse():
 
                 running_loss += loss.item()
 
-                if ite % 1000 == 999:
-                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 999))
+                if ite % 100 == 99:
+                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 99))
                     running_loss = 0.0
 
     def play(self, seed, max_steps=200):
@@ -226,7 +227,7 @@ class MCTSnetMouse():
             self.training_set.append(self.solve_game(seed, max_steps))
 
     def save_training_set(self, path):
-        pickle.dump(self.training_set, path)
+        pickle.dump(self.training_set, open(path, 'wb'))
 
     def load_training_set(self, path):
-        self.training_set = pickle.load(path)
+        self.training_set = pickle.load(open(path, 'rb'))

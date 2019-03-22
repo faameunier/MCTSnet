@@ -18,7 +18,8 @@ class MCTSnet(nn.Module):
             self.fun = helper
         elif style == "set_state":
             def helper(self):
-                return self.env.set_state(self.tree.get_root().state)
+                self.env.set_state(self.tree.get_root().state.cpu().numpy()[0])
+                return self.env
             self.fun = helper
         else:
             raise ValueError("Unknown environment copy style")
@@ -40,7 +41,7 @@ class MCTSnet(nn.Module):
         self.__env = attr
 
     def reset_tree(self, x):
-        self.tree = MemoryTree(self.n_actions)
+        self.tree = AcyclicTree(self.n_actions)
         self.tree.set_root(x, self.embedding(x))
 
     def replanning(self, action):
@@ -56,6 +57,7 @@ class MCTSnet(nn.Module):
             next_node = None
             stop = False
             # exploring / exploitation
+            deadend_unlock = 0
             while not stop:
                 h = node.h
                 children = node.children
@@ -71,21 +73,41 @@ class MCTSnet(nn.Module):
                 # next_action = utils.softargmax(actions)
                 # print(next_action)
                 next_node = node.get_child(next_action)
-                if next_node is None:
-                    # new node discovered
+                if next_node is None:  # new node discovered
+                    # First look the resulting state
                     state, reward, win, _ = new_env.step(int(next_action))
                     state = torch.tensor([state], requires_grad=True).to(device)
+
+                    # Try to add the node to the tree
                     temp_node = node.set_child(next_action, state, self.embedding(x), torch.tensor(reward, requires_grad=True).to(device), win)
                     if temp_node is not None:
+                        # The node was added to the tree succesfully, therefore it is a leaf
                         next_node = temp_node
                         stop = True
                     else:
-                        node = next_node
-                elif next_node.solved:
+                        # The node was rejected, are any moves still possible ?
+                        if not node.moves:
+                            # No more moves to perform, this is a deadend, stop simulation
+                            next_node = node
+                            stop = True
+                        else:
+                            # Yes, this is not a deadend yet, try again
+                            deadend_unlock += 1
+                            if deadend_unlock >= self.n_actions * 8:
+                                # The policy keeps requesting already visited states
+                                # Stop the simulation (easy solution for such problem)
+                                next_node = node
+                                stop = True
+                            else:
+                                # Try again policy
+                                node = next_node
+                elif next_node.solved:  # Winning Leaf
                     stop = True
-                else:
+                else:  # Still exploring the graph
+                    # Reset the deadend_unlock variable
+                    deadend_unlock = 0
                     node = next_node
-            # backup
+            # backup till the root
             stop = False
             while not stop:
                 h_t1 = next_node.h
