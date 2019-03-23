@@ -71,4 +71,6 @@ gym-sokoban/
 temp/*
 data/
 
+mnet_*
+
 *.secret*

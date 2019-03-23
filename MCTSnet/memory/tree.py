@@ -1,10 +1,14 @@
 import pickle
+from .interface import *
 
 
-class MemoryTree():
+class MemoryTree(MemoryManager):
     """Memory Tree
 
     A basic memory tree.
+
+    Extends:
+        MemoryManager
     """
 
     def __init__(self, n_children):
@@ -67,10 +71,13 @@ class MemoryTree():
         self.root = new_root
 
 
-class MemoryNode():
+class MemoryNode(Memory):
     """Memory Node
 
     An MemoryNode to build an MemoryTree.
+
+    Extends:
+        Memory
     """
 
     def __init__(self, state, h, reward, solved, tree, parent=None, action=None):
@@ -110,7 +117,7 @@ class MemoryNode():
             solved {boolean} -- Wether the game is finished or not
 
         Returns:
-            AcyclicNode -- The built node
+            MemoryNode -- The built node
         """
         self.children[action.int()] = MemoryNode(state, h, reward, solved, self.tree, self, action)
         return self.children[action.int()]
@@ -180,15 +187,15 @@ class AcyclicTree(MemoryTree):
         new_root = self.root.children[root_action]
         # Cut all branches that but the selected one
         for k in reversed(range(self.n_children)):
-            if k != root_action:
-                self.remove_children(self.children[k])
+            if k != root_action and self.root.children[k] is not None:
+                self.remove_children(self.root.children[k])
         # Define the selected branch as root
         if new_root is not None:
             new_root.parent = None
         else:
             raise MemoryError("New root is None")
-        del self.root
         self.reset_cycles(self.get_root())
+        del self.root
         self.root = new_root
 
     def remove_children(self, node):
@@ -202,7 +209,10 @@ class AcyclicTree(MemoryTree):
         Arguments:
             node {AcyclicNode} -- the node to delete
         """
-        self.visited_states.remove(pickle.dumps(node.state))
+        try:
+            self.visited_states.remove(pickle.dumps(node.state))
+        except ValueError:
+            pass
         for c in node.children:
             if c is not None:
                 self.remove_children(c)
@@ -230,7 +240,7 @@ class AcyclicTree(MemoryTree):
                 if k not in node.moves:
                     node.moves.append(k)
             else:
-                self.check_cycles(node.children[k])
+                self.reset_cycles(node.children[k])
 
 
 class AcyclicNode(MemoryNode):

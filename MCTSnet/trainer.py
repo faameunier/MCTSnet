@@ -169,8 +169,8 @@ class MCTSnetMouse():
 
                 running_loss += loss.item()
 
-                if ite % 100 == 99:
-                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 99))
+                if ite % 300 == 299:
+                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 299))
                     running_loss = 0.0
 
     def play(self, seed, max_steps=200):
@@ -194,7 +194,7 @@ class MCTSnetMouse():
                 self.model.reset_tree(inputs)
                 outputs = self.model(inputs)
 
-                self.model.replanning(torch.argmax(outputs))
+                # self.model.replanning(torch.argmax(outputs))
 
                 state, _, win, _ = self.model.env.step(torch.argmax(outputs))
 
