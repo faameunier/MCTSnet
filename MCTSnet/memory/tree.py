@@ -120,7 +120,7 @@ class MemoryNode(Memory):
             MemoryNode -- The built node
         """
         self.children[action.int()] = MemoryNode(state, h, reward, solved, self.tree, self, action)
-        return self.children[action.int()]
+        return self.children[action.int()], True
 
     def get_parent(self):
         """Get Parent
@@ -286,4 +286,4 @@ class AcyclicNode(MemoryNode):
         if temp in self.tree.visited_states:
             return None
         self.children[action.int()] = AcyclicNode(state, h, reward, solved, self.tree, self, action)
-        return self.children[action.int()]
+        return self.children[action.int()], True

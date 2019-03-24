@@ -35,10 +35,6 @@ class Environment(object):
     def step(self, action):
         """This function returns the new state, reward and decides if the
         game ends."""
-
-        self.position = np.zeros((self.grid_size, self.grid_size))
-
-        self.position[self.x, self.y] = 1
         if action == 0:
             if self.x == self.grid_size - 1:
                 self.x = self.x - 1
@@ -64,7 +60,11 @@ class Environment(object):
 
         self.t = self.t + 1
         reward = self.board[self.x, self.y]
+
         self.board[self.x, self.y] = 0
+        self.position = np.zeros((self.grid_size, self.grid_size))
+        self.position[self.x, self.y] = 1
+
         game_over = self.t > self.max_time or len(np.argwhere(self.board >= 0.5)) == 0
         if len(np.argwhere(self.board >= 0.01)) == 0:
             reward += 1000
@@ -101,7 +101,7 @@ class Environment(object):
 class EnvironmentExploring(Environment):
     def __init__(self, grid_size=10, max_time=500, temperature=0.1):
         super().__init__(grid_size, max_time, temperature)
-        self.malus_position = np.zeros((self.grid_size, self.grid_size))
+        # self.malus_position = np.zeros((self.grid_size, self.grid_size))
 
     def step(self, action):
         """This function returns the new state, reward and decides if the
@@ -117,13 +117,13 @@ class EnvironmentExploring(Environment):
 
     def reset(self):
         """This function resets the game and returns the initial state"""
-        self.malus_position = np.zeros((self.grid_size, self.grid_size))
+        # self.malus_position = np.zeros((self.grid_size, self.grid_size))
         state = super().reset()
         # print(np.concatenate(self.create_state(state), axis=2))
         return state  # self.create_state(state)
 
-    def create_state(self, super_state):
-        return np.array((super_state[0], super_state[1], self.malus_position))
+    # def create_state(self, super_state):
+    #     return np.array((super_state[0], super_state[1], self.malus_position))
 
     def set_state(self, state):
         self.board = state[0]

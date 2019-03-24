@@ -169,8 +169,8 @@ class MCTSnetMouse():
 
                 running_loss += loss.item()
 
-                if ite % 300 == 299:
-                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 299))
+                if ite % 100 == 99:
+                    print('[%d, %5d] mean loss: %.3f' % (e + 1, ite, running_loss / 99))
                     running_loss = 0.0
 
     def play(self, seed, max_steps=200):
@@ -180,24 +180,16 @@ class MCTSnetMouse():
         state = env.reset()
         self.model.env = env
         with torch.no_grad():
-            first = True
-            inputs = torch.tensor(state).float().to(device)
-            inputs = inputs.reshape((-1, *self.feature_space))
-            self.model.reset_tree(inputs)
-
             for s in range(max_steps):
-                if not first:
-                    inputs = torch.tensor(state).float().to(device)
-                    inputs = inputs.reshape((-1, *self.feature_space))
+                inputs = torch.tensor(state).float().to(device)
+                inputs = inputs.reshape((-1, *self.feature_space))
 
-                first = False
                 self.model.reset_tree(inputs)
                 outputs = self.model(inputs)
 
                 # self.model.replanning(torch.argmax(outputs))
 
-                state, _, win, _ = self.model.env.step(torch.argmax(outputs))
-
+                state, reward, win, _ = self.model.env.step(np.random.choice(np.arange(self.n_actions), 1, p=outputs.detach().cpu().numpy()[0])[0])
                 display.clear_output(wait=True)
                 display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
                 time.sleep(0.05)
@@ -207,7 +199,7 @@ class MCTSnetMouse():
         return env.score
 
     def play_solution(self, seed, max_steps=200):
-        solution = self.solve_game(seed, max_steps)
+        solution = self.solve_game(seed, max_steps, verbose=True)
         random.seed(seed)
         np.random.seed(seed)
         env = game.EnvironmentExploring(temperature=0.3)
@@ -215,7 +207,7 @@ class MCTSnetMouse():
         for step in solution:
             display.clear_output(wait=True)
             display.display(PIL.Image.fromarray(env.get_frame().astype(np.uint8)))
-            time.sleep(0.05)
+            time.sleep(0.1)
             _, _, win, _ = env.step(step['action'])
             if win:
                 break

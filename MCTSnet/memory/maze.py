@@ -8,6 +8,8 @@ class Maze(MemoryManager):
     A directed graph that
     represents all known memories
 
+    This is a greedy memory.
+
     Extends:
         MemoryManager
     """
@@ -17,7 +19,7 @@ class Maze(MemoryManager):
         self.root = None
         self.known_nodes = []
         self.known_hashes = []
-        self.path = [self.root]
+        self.path = []
 
     def set_root(self, state, h):
         """Set current root
@@ -25,7 +27,7 @@ class Maze(MemoryManager):
         Set the graph starting point
 
         Arguments:
-            state {torch.tensor or np.array} -- State of the environment
+            state {torch.tensor} -- State of the environment
             h {torch.tensor} -- Embedding of the state
 
         Raises:
@@ -34,7 +36,7 @@ class Maze(MemoryManager):
         if self.root is None:
             self.root = MazeNode(state, h, 0, False, self)
             self.known_nodes.append(self.root)
-            self.known_hashes.append(pickle.dumps(self.root))
+            self.known_hashes.append(pickle.dumps(self.root.state.detach().cpu().numpy()))
         else:
             raise ValueError("Root is already defined")
 
@@ -64,10 +66,23 @@ class Maze(MemoryManager):
             MemoryError -- The selected child isn't explored
         """
         self.root = self.root.get_child(root_action)
-        self.path = [self.root]
+        self.path = []
 
-    def add_to_path(self, node):
+    def simulation_reset(self):
+        """Reset path
+
+        Reset the last explored path.
+        """
+        self.path = []  # Security, this should be useless
+
+    def append_to_path(self, node):
         self.path.append(node)
+
+    def get_last_visited(self):
+        try:
+            return self.path.pop()
+        except IndexError:
+            return None
 
 
 class MazeNode(Memory):
@@ -100,7 +115,10 @@ class MazeNode(Memory):
         Returns:
             MazeNode -- resulting node from action
         """
-        return self.children[action.int()]
+        child = self.children[action.int()]
+        if child is not None:
+            self.tree.append_to_path(self)
+        return child
 
     def set_child(self, action, state, h, reward, solved):
         """Add a chil to the current Node
@@ -109,7 +127,7 @@ class MazeNode(Memory):
 
         Arguments:
             action {int} -- the action that led to this Node
-            state {np.array or torch.Tensor} -- State of the new node
+            state {torch.Tensor} -- State of the new node
             h {torch.Tensor} -- embedding of the new node
             reward {float} -- Reward obtained at this node
             solved {boolean} -- Wether the game is finished or not
@@ -117,16 +135,19 @@ class MazeNode(Memory):
         Returns:
             MemoryNode -- The built node
         """
-        temp = pickle.dumps(state)
+        temp = pickle.dumps(state.detach().cpu().numpy())
+        new = False
         try:
             k = self.tree.known_hashes.index(temp)
             self.children[action.int()] = self.tree.known_nodes[k]
         except ValueError:
-            new_node = MazeNode(state, h, reward, solved, self.tree, self, action)
+            new = True
+            new_node = MazeNode(state, h, reward, solved, self.tree, None, action)
             self.children[action.int()] = new_node
             self.tree.known_hashes.append(temp)
             self.tree.known_nodes.append(new_node)
-        return self.children[action.int()]
+        self.tree.append_to_path(self)
+        return self.children[action.int()], new
 
     def get_parent(self):
         """Get Parent
@@ -136,4 +157,4 @@ class MazeNode(Memory):
         Returns:
             MemoryNode -- current node's parent
         """
-        # return self.parent
+        return self.tree.get_last_visited()

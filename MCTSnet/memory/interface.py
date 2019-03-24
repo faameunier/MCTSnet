@@ -90,6 +90,7 @@ class Memory():
 
         Returns:
             Memory -- The built node
+            Boolean -- new node or not
         """
         raise NotImplementedError
 

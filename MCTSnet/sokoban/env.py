@@ -34,3 +34,7 @@ class SokobanEnvEncoded(SokobanEnv):
         img = super().render(mode=mode)
         display_img = PIL.Image.fromarray(img)
         return display_img
+
+    def get_frame(self):
+        img = super().render(mode="rgb_array")
+        return img
