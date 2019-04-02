@@ -34,6 +34,7 @@ Two games were tested:
 
 The algorithm has proven to converge on the mousegame, however even after 15hours of training the MCTSnet performance is poor. Additionnal testing is required.
 
+For a detailed description please check https://github.com/faameunier/MCTSnet/blob/master/RL_Manuscript.pdf
 # References
 [1] Arthur Guez, Theophane Weber, Ioannis Antonoglou, Karen Simonyan, Oriol Vinyals, Daan Wierstra, Remi Munos, and David Silver. Learning
 to  search  with  mctsnets. CoRR,  abs/1802.04697, 2018.
