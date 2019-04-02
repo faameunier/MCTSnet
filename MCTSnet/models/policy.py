@@ -35,6 +35,8 @@ class PiPriorLogits(nn.Module):
 
 
 class Pi(nn.Module):
+    """ policy with prior """
+
     def __init__(self, embeddings_size=128, n_actions=8, w0=0.5, w1=0.5):
         super().__init__()
         self.embeddings_size = embeddings_size
@@ -51,6 +53,8 @@ class Pi(nn.Module):
 
 
 class randomPi(nn.Module):
+    """ random policy """
+
     def __init__(self, n_actions=8):
         super().__init__()
         self.n_actions = n_actions

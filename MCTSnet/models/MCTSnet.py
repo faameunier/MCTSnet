@@ -16,6 +16,8 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class MCTSnet(nn.Module):
+    """ The actual MCTSnet """
+
     def __init__(self, backup, embedding, policy, readout, n_simulations=10, n_actions=8, style="copy"):
         super().__init__()
         self.fun = None
@@ -45,6 +47,7 @@ class MCTSnet(nn.Module):
         self.tree.set_root(x, self.embedding(x))
 
     def replanning(self, action):
+        """ use with caution, if action was never visited, it will raise an error """
         self.tree.cut_tree(action)
 
     def forward(self, x):

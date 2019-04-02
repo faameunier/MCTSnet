@@ -29,6 +29,8 @@ class BetaGate(nn.Module):
 
 
 class Beta(nn.Module):
+    """ gated residual with learned gate """
+
     def __init__(self, embeddings_size=128):
         super().__init__()
         self.update = BetaMLP(embeddings_size)

@@ -19,6 +19,8 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class MCTSnetSokoban():
+    """ Deprecated, may not work """
+
     def __init__(self, feature_space=(4, 10, 10), n_embeddings=128, n_actions=4, n_simulations=10):
         self.feature_space = feature_space
         self.n_embeddings = n_embeddings
