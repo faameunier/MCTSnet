@@ -1,0 +1,170 @@
+[
+  {
+    "Place": "LE FLOW PARIS",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1303_c.jpg",
+    "adress": "4 Port des Invalides , Paris 7",
+    "lat": "48.8631706",
+    "lon": "2.3141537"
+  },
+  {
+    "Place": "Le Queen",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1218_c.jpg",
+    "adress": "102 avenue des Champs Elysées , Paris 8",
+    "lat": "48.8719037",
+    "lon": "2.3023229"
+  },
+  {
+    "Place": "ROOFTOP FL TOWER ROOFTOP GEANT",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1286_c.jpg",
+    "adress": "Place des Insurgés de Varsovie , Paris 15",
+    "lat": "48.8275051",
+    "lon": "2.2929313"
+  },
+  {
+    "Place": "La Machine du Moulin Rouge",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1212_c.jpg",
+    "adress": "90 bd de Clichy , Paris 18",
+    "lat": "48.8841471",
+    "lon": "2.3323749"
+  },
+  {
+    "Place": "CHALET DU LAC",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1279_c.jpg",
+    "adress": "Avenue de Bel air , Paris 12",
+    "lat": "48.8465232",
+    "lon": "2.3974277"
+  },
+  {
+    "Place": "THE BRIDGE ALEXANDRE III",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1292_c.jpg",
+    "adress": "PONT ALEXANDRE III, RIVE DROITE 75008 , Paris 8",
+    "lat": "48.8638995",
+    "lon": "2.313559"
+  },
+  {
+    "Place": "HERITAGE CLUB PARIS",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1274_c.jpg",
+    "adress": "37, Avenue de Friedland , Paris 8",
+    "lat": "48.8740008",
+    "lon": "2.2996201"
+  },
+  {
+    "Place": "Hippodrome de Longchamp",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1252_c.jpg",
+    "adress": "Route des tribunes , Paris 16",
+    "lat": "48.8593095",
+    "lon": "2.2293265"
+  },
+  {
+    "Place": "Jardin de Bagatelle",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1174_c.jpg",
+    "adress": "Route de Sèvres - Neuilly , Paris 16",
+    "lat": "48.8638694",
+    "lon": "2.2397955"
+  },
+  {
+    "Place": "Duplex",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_757_c.jpg",
+    "adress": "2 bis avenue Foch , Paris 16",
+    "lat": "48.8738066",
+    "lon": "2.2930833"
+  },
+  {
+    "Place": "Red Light",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_821_c.jpg",
+    "adress": "34 rue du départ , Paris 15",
+    "lat": "48.8417009",
+    "lon": "2.3220689"
+  },
+  {
+    "Place": "Mix Club Paris",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1172_c.jpg",
+    "adress": "24 rue de l'arrivée , Paris 15",
+    "lat": "48.8421482",
+    "lon": "2.3213476"
+  },
+  {
+    "Place": "Bobino Club",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_738_c.jpg",
+    "adress": "20, rue de la Gaité , Paris 14",
+    "lat": "48.8400123",
+    "lon": "2.3235952"
+  },
+  {
+    "Place": "Bus Palladium",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_739_c.jpg",
+    "adress": "6 rue pierre fontaine , Paris 9",
+    "lat": "48.8808341",
+    "lon": "2.3350153"
+  },
+  {
+    "Place": "Le MadaM",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_901_c.jpg",
+    "adress": "128 rue la Boétie , Paris 8",
+    "lat": "48.8710475",
+    "lon": "2.3057669"
+  },
+  {
+    "Place": "Le Palais Maillot",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_847_c.jpg",
+    "adress": "2 Place de la Porte Maillot , Paris 17",
+    "lat": "48.879434",
+    "lon": "2.2835369"
+  },
+  {
+    "Place": "VIP Room",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_841_c.jpg",
+    "adress": "188 bis rue de Rivoli , Paris 1",
+    "lat": "48.8635368",
+    "lon": "2.333182"
+  },
+  {
+    "Place": "Crystal Lounge",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_871_c.jpg",
+    "adress": "51 rue de Ponthieu , Paris 8",
+    "lat": "48.8716429",
+    "lon": "2.3061089"
+  },
+  {
+    "Place": "Le Showcase",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1125_c.jpg",
+    "adress": "Port des Champs Elysées , Paris 8",
+    "lat": "48.8644144",
+    "lon": "2.3134377"
+  },
+  {
+    "Place": "Les Planches",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_879_c.jpg",
+    "adress": "40 rue du Colisée , Paris 8",
+    "lat": "48.8716518",
+    "lon": "2.3110872"
+  },
+  {
+    "Place": "Pavillon Franklin Roosevelt",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1119_c.jpg",
+    "adress": "23 rue de Ponthieu , Paris 8",
+    "lat": "48.8707549",
+    "lon": "2.3092389"
+  },
+  {
+    "Place": "Le Régine's",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1120_c.jpg",
+    "adress": "51 rue de Ponthieu , Paris 8",
+    "lat": "48.8716429",
+    "lon": "2.3061089"
+  },
+  {
+    "Place": "Concorde Atlantique",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_752_c.jpg",
+    "adress": "Port Solferino - 23, Quai Anatole France , Paris 7",
+    "lat": "48.861558",
+    "lon": "2.3241795"
+  },
+  {
+    "Place": "NEW PAVILLON CHAMPS ELYSÉES",
+    "Img": "http://www.paris-soiree.fr/upload/fotos/foto_1297_c.jpg",
+    "adress": "32 RUE DE TILSITT , Paris 17",
+    "lat": "48.8748389",
+    "lon": "2.2931702"
+  }
+]
